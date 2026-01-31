@@ -1,0 +1,66 @@
+trigger:
+  branches:
+    include:
+      - main
+      - release/*
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+- name: nodeVersion
+  value: '18.x'
+
+stages:
+
+# ---------------- DEV STAGE ----------------
+- stage: Dev
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+  variables:
+  - group: dev-vars
+  jobs:
+  - job: BuildAndDeployDev
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: $(nodeVersion)
+
+    - script: |
+        npm install
+        npm run build
+      displayName: Build React App
+      env:
+        REACT_APP_ENV: $(REACT_APP_ENV)
+
+    - task: AzureWebApp@1
+      displayName: Deploy to Dev WebApp
+      inputs:
+        azureSubscription: azure-service-connection
+        appName: $(WEBAPP_NAME)
+        package: build
+
+# ---------------- QA STAGE ----------------
+- stage: QA
+  condition: startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')
+  variables:
+  - group: qa-vars
+  jobs:
+  - job: BuildAndDeployQA
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: $(nodeVersion)
+
+    - script: |
+        npm install
+        npm run build
+      displayName: Build React App
+      env:
+        REACT_APP_ENV: $(REACT_APP_ENV)
+
+    - task: AzureWebApp@1
+      displayName: Deploy to QA WebApp
+      inputs:
+        azureSubscription: azure-service-connection
+        appName: $(WEBAPP_NAME)
+        package: build

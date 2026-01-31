@@ -5,9 +5,11 @@ trigger:
       - release/*
 
 pool:
-  vmImage: 'ubuntu-latest'
+  name: Default
 
 variables:
+- group: Dev-Variable-Group
+- group: QA-Variable-Group
 - name: nodeVersion
   value: '18.x'
 
@@ -17,7 +19,7 @@ stages:
 - stage: Dev
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   variables:
-  - group: dev-vars
+  - group: Dev-Variable-Group
   jobs:
   - job: BuildAndDeployDev
     steps:
@@ -35,7 +37,7 @@ stages:
     - task: AzureWebApp@1
       displayName: Deploy to Dev WebApp
       inputs:
-        azureSubscription: azure-service-connection
+        azureSubscription: '$(azureSubscription)'
         appName: $(WEBAPP_NAME)
         package: build
 
@@ -43,7 +45,7 @@ stages:
 - stage: QA
   condition: startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')
   variables:
-  - group: qa-vars
+  - group: QA-Variable-Group
   jobs:
   - job: BuildAndDeployQA
     steps:
@@ -61,6 +63,6 @@ stages:
     - task: AzureWebApp@1
       displayName: Deploy to QA WebApp
       inputs:
-        azureSubscription: azure-service-connection
+        azureSubscription: '$(azureSubscription)'
         appName: $(WEBAPP_NAME)
         package: build

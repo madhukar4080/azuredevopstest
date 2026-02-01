@@ -36,12 +36,21 @@ stages:
       env:
         REACT_APP_ENV: $(REACT_APP_ENV)
 
+    # 🔹 Publish build output
+    - task: PublishBuildArtifacts@1
+      displayName: Publish React Build
+      inputs:
+        PathtoPublish: 'build'
+        ArtifactName: 'react-build'
+
+    # 🔹 Deploy artifact
     - task: AzureWebApp@1
       displayName: Deploy to Dev WebApp
       inputs:
         azureSubscription: $(azureSubscription)
+        appType: webAppLinux
         appName: $(WEBAPP_NAME)
-        package: build
+        package: '$(Pipeline.Workspace)/react-build'
 
 
 # ================= QA STAGE =================
@@ -65,9 +74,16 @@ stages:
       env:
         REACT_APP_ENV: $(REACT_APP_ENV)
 
+    - task: PublishBuildArtifacts@1
+      displayName: Publish React Build
+      inputs:
+        PathtoPublish: 'build'
+        ArtifactName: 'react-build'
+
     - task: AzureWebApp@1
       displayName: Deploy to QA WebApp
       inputs:
         azureSubscription: $(azureSubscription)
+        appType: webAppLinux
         appName: $(WEBAPP_NAME)
-        package: build
+        package: '$(Pipeline.Workspace)/react-build'

@@ -55,7 +55,8 @@ stages:
         azureSubscription: $(azureSubscription)
         appType: webAppLinux
         appName: $(WEBAPP_NAME)
-        package: '$(Pipeline.Workspace)/react-build'
+        package: '$(System.DefaultWorkingDirectory)/dist'
+
 
 
 # ================= QA STAGE =================
@@ -96,4 +97,4 @@ stages:
         azureSubscription: $(azureSubscription)
         appType: webAppLinux
         appName: $(WEBAPP_NAME)
-        package: '$(Pipeline.Workspace)/react-build'
+        package: '$(System.DefaultWorkingDirectory)/dist'

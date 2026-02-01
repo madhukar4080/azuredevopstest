@@ -5,65 +5,69 @@ trigger:
       - release/*
 
 pool:
-  name: Default
-
-variables:
-- group: Dev-Variable-Group
-- group: QA-Variable-Group
-#  azureSubscription: 'Azure subscription 1(1c29d824-9aa5-4286-9b2e-161e891c333f)'
-- name: nodeVersion
-  value: '18.x'
+  vmImage: ubuntu-latest
 
 stages:
+# -------- BUILD --------
+- stage: Build
+  displayName: Build azuredevopstest
+  jobs:
+    - job: Build
+      steps:
+        - task: NodeTool@0
+          inputs:
+            versionSpec: '18.x'
 
-# ---------------- DEV STAGE ----------------
-- stage: Dev
+        - script: |
+            npm install
+            npm run build
+          displayName: Install & Build React App
+
+        - task: PublishBuildArtifacts@1
+          inputs:
+            pathToPublish: build
+            artifactName: drop
+
+# -------- DEV DEPLOY --------
+- stage: Deploy_Dev
+  displayName: Deploy to Dev
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   variables:
-  - group: Dev-Variable-Group
+    - group: dev-vars
   jobs:
-  - job: BuildAndDeployDev
-    steps:
-    - task: NodeTool@0
-      inputs:
-        versionSpec: $(nodeVersion)
+    - deployment: DevDeploy
+      environment: dev
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+              - download: current
+                artifact: drop
 
-    - script: |
-        npm install
-        npm run build
-      displayName: Build React App
-      env:
-        REACT_APP_ENV: $(REACT_APP_ENV)
+              - task: AzureWebApp@1
+                inputs:
+                  azureSubscription: $(azureSubscription)
+                  appName: $(webAppName)
+                  package: $(Pipeline.Workspace)/drop
 
-    - task: AzureWebApp@1
-      displayName: Deploy to Dev WebApp
-      inputs:
-        azureSubscription: '$(azureSubscription)'
-        appName: $(WEBAPP_NAME)
-        package: '$(System.DefaultWorkingDirectory)/dist'
-
-# ---------------- QA STAGE ----------------
-- stage: QA
+# -------- QA DEPLOY --------
+- stage: Deploy_QA
+  displayName: Deploy to QA
   condition: startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')
   variables:
-  - group: QA-Variable-Group
+    - group: qa-vars
   jobs:
-  - job: BuildAndDeployQA
-    steps:
-    - task: NodeTool@0
-      inputs:
-        versionSpec: $(nodeVersion)
+    - deployment: QADeploy
+      environment: qa
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+              - download: current
+                artifact: drop
 
-    - script: |
-        npm install
-        npm run build
-      displayName: Build React App
-      env:
-        REACT_APP_ENV: $(REACT_APP_ENV)
-
-    - task: AzureWebApp@1
-      displayName: Deploy to QA WebApp
-      inputs:
-        azureSubscription: '$(azureSubscription)'
-        appName: $(WEBAPP_NAME)
-        package: '$(System.DefaultWorkingDirectory)/dist'
+              - task: AzureWebApp@1
+                inputs:
+                  azureSubscription: $(azureSubscription)
+                  appName: $(webAppName)
+                  package: $(Pipeline.Workspace)/drop

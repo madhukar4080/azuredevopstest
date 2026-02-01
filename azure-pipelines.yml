@@ -8,22 +8,20 @@ pool:
   name: Default   # Windows agent
 
 variables:
-- group: Dev-Variable-Group
-- group: QA-Variable-Group
 - name: nodeVersion
   value: '18.x'
 
 stages:
 
-# ================= DEV STAGE =================
+# ================= DEV =================
 - stage: Dev
-  displayName: Deploy to DEV
+  displayName: Deploy DEV
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   variables:
   - group: Dev-Variable-Group
 
   jobs:
-  - job: BuildAndDeployDev
+  - job: DevDeploy
     steps:
     - task: NodeTool@0
       inputs:
@@ -32,25 +30,14 @@ stages:
     - script: |
         npm install
         npm run build
+        dir
+        dir dist
       displayName: Build React App (DEV)
       env:
         REACT_APP_ENV: $(REACT_APP_ENV)
 
-    - script: |
-        dir build
-      displayName: Verify build folder
-
-
-    # 🔹 Publish build output
-    - task: PublishBuildArtifacts@1
-      displayName: Publish React Build
-      inputs:
-        PathtoPublish: 'build'
-        ArtifactName: 'react-build'
-
-    # 🔹 Deploy artifact
     - task: AzureWebApp@1
-      displayName: Deploy to Dev WebApp
+      displayName: Deploy to Dev Web App
       inputs:
         azureSubscription: $(azureSubscription)
         appType: webAppLinux
@@ -58,16 +45,15 @@ stages:
         package: '$(System.DefaultWorkingDirectory)/dist'
 
 
-
-# ================= QA STAGE =================
+# ================= QA =================
 - stage: QA
-  displayName: Deploy to QA
+  displayName: Deploy QA
   condition: startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')
   variables:
   - group: QA-Variable-Group
 
   jobs:
-  - job: BuildAndDeployQA
+  - job: QADeploy
     steps:
     - task: NodeTool@0
       inputs:
@@ -76,23 +62,14 @@ stages:
     - script: |
         npm install
         npm run build
+        dir
+        dir dist
       displayName: Build React App (QA)
       env:
         REACT_APP_ENV: $(REACT_APP_ENV)
 
-    - script: |
-        dir build
-      displayName: Verify build folder
-
-
-    - task: PublishBuildArtifacts@1
-      displayName: Publish React Build
-      inputs:
-        PathtoPublish: 'build'
-        ArtifactName: 'react-build'
-
     - task: AzureWebApp@1
-      displayName: Deploy to QA WebApp
+      displayName: Deploy to QA Web App
       inputs:
         azureSubscription: $(azureSubscription)
         appType: webAppLinux

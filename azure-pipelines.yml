@@ -5,23 +5,24 @@ trigger:
       - release/*
 
 pool:
-  name: Default   # Windows agent
+  name: Default
 
 variables:
+- group: Dev-Variable-Group
+- group: QA-Variable-Group
+#  azureSubscription: 'Azure subscription 1(1c29d824-9aa5-4286-9b2e-161e891c333f)'
 - name: nodeVersion
   value: '18.x'
 
 stages:
 
-# ================= DEV =================
+# ---------------- DEV STAGE ----------------
 - stage: Dev
-  displayName: Deploy DEV
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   variables:
   - group: Dev-Variable-Group
-
   jobs:
-  - job: DevDeploy
+  - job: BuildAndDeployDev
     steps:
     - task: NodeTool@0
       inputs:
@@ -30,30 +31,24 @@ stages:
     - script: |
         npm install
         npm run build
-        dir
-        dir dist
-      displayName: Build React App (DEV)
+      displayName: Build React App
       env:
         REACT_APP_ENV: $(REACT_APP_ENV)
 
     - task: AzureWebApp@1
-      displayName: Deploy to Dev Web App
+      displayName: Deploy to Dev WebApp
       inputs:
-        azureSubscription: $(azureSubscription)
-        appType: webAppLinux
+        azureSubscription: '$(azureSubscription)'
         appName: $(WEBAPP_NAME)
         package: '$(System.DefaultWorkingDirectory)/dist'
 
-
-# ================= QA =================
+# ---------------- QA STAGE ----------------
 - stage: QA
-  displayName: Deploy QA
   condition: startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')
   variables:
   - group: QA-Variable-Group
-
   jobs:
-  - job: QADeploy
+  - job: BuildAndDeployQA
     steps:
     - task: NodeTool@0
       inputs:
@@ -62,16 +57,13 @@ stages:
     - script: |
         npm install
         npm run build
-        dir
-        dir dist
-      displayName: Build React App (QA)
+      displayName: Build React App
       env:
         REACT_APP_ENV: $(REACT_APP_ENV)
 
     - task: AzureWebApp@1
-      displayName: Deploy to QA Web App
+      displayName: Deploy to QA WebApp
       inputs:
-        azureSubscription: $(azureSubscription)
-        appType: webAppLinux
+        azureSubscription: '$(azureSubscription)'
         appName: $(WEBAPP_NAME)
         package: '$(System.DefaultWorkingDirectory)/dist'

@@ -5,7 +5,7 @@ trigger:
       - release/*
 
 pool:
-  name: Default
+  name: Default   # Windows agent
 
 variables:
 - group: Dev-Variable-Group
@@ -15,11 +15,13 @@ variables:
 
 stages:
 
-# ---------------- DEV STAGE ----------------
+# ================= DEV STAGE =================
 - stage: Dev
+  displayName: Deploy to DEV
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   variables:
   - group: Dev-Variable-Group
+
   jobs:
   - job: BuildAndDeployDev
     steps:
@@ -30,22 +32,25 @@ stages:
     - script: |
         npm install
         npm run build
-      displayName: Build React App
+      displayName: Build React App (DEV)
       env:
         REACT_APP_ENV: $(REACT_APP_ENV)
 
     - task: AzureWebApp@1
       displayName: Deploy to Dev WebApp
       inputs:
-        azureSubscription: '$(azureSubscription)'
+        azureSubscription: $(azureSubscription)
         appName: $(WEBAPP_NAME)
         package: build
 
-# ---------------- QA STAGE ----------------
+
+# ================= QA STAGE =================
 - stage: QA
+  displayName: Deploy to QA
   condition: startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')
   variables:
   - group: QA-Variable-Group
+
   jobs:
   - job: BuildAndDeployQA
     steps:
@@ -56,13 +61,13 @@ stages:
     - script: |
         npm install
         npm run build
-      displayName: Build React App
+      displayName: Build React App (QA)
       env:
         REACT_APP_ENV: $(REACT_APP_ENV)
 
     - task: AzureWebApp@1
       displayName: Deploy to QA WebApp
       inputs:
-        azureSubscription: '$(azureSubscription)'
+        azureSubscription: $(azureSubscription)
         appName: $(WEBAPP_NAME)
         package: build

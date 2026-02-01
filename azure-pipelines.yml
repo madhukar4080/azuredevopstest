@@ -5,7 +5,7 @@ trigger:
       - release/*
 
 pool:
-  vmImage: ubuntu-latest
+  name: Default
 
 stages:
 # -------- BUILD --------
@@ -33,7 +33,7 @@ stages:
   displayName: Deploy to Dev
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   variables:
-    - group: dev-vars
+    - group: Dev-Variable-Group
   jobs:
     - deployment: DevDeploy
       environment: dev
@@ -55,7 +55,7 @@ stages:
   displayName: Deploy to QA
   condition: startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')
   variables:
-    - group: qa-vars
+    - group: QA-Variable-Group
   jobs:
     - deployment: QADeploy
       environment: qa

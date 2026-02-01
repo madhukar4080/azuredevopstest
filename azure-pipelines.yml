@@ -39,7 +39,7 @@ stages:
       inputs:
         azureSubscription: '$(azureSubscription)'
         appName: $(WEBAPP_NAME)
-        package: build
+        package: '$(System.DefaultWorkingDirectory)/dist'
 
 # ---------------- QA STAGE ----------------
 - stage: QA
@@ -65,4 +65,4 @@ stages:
       inputs:
         azureSubscription: '$(azureSubscription)'
         appName: $(WEBAPP_NAME)
-        package: build
+        package: '$(System.DefaultWorkingDirectory)/dist'

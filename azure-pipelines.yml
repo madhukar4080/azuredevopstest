@@ -10,6 +10,7 @@ pool:
 variables:
 - group: Dev-Variable-Group
 - group: QA-Variable-Group
+  azureSubscription: 'Azure subscription 1(1c29d824-9aa5-4286-9b2e-161e891c333f)'
 - name: nodeVersion
   value: '18.x'
 

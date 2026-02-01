@@ -36,6 +36,11 @@ stages:
       env:
         REACT_APP_ENV: $(REACT_APP_ENV)
 
+    - script: |
+        dir build
+      displayName: Verify build folder
+
+
     # 🔹 Publish build output
     - task: PublishBuildArtifacts@1
       displayName: Publish React Build
@@ -73,6 +78,11 @@ stages:
       displayName: Build React App (QA)
       env:
         REACT_APP_ENV: $(REACT_APP_ENV)
+
+    - script: |
+        dir build
+      displayName: Verify build folder
+
 
     - task: PublishBuildArtifacts@1
       displayName: Publish React Build
